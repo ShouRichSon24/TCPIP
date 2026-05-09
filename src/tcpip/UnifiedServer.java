@@ -265,6 +265,9 @@ public class UnifiedServer extends JFrame {
                     case "VOICE":
                         receiveVoice();
                         break;
+                    case "MESSAGE":
+                        receiveMessage();
+                        break;
                     default:
                         log("Unknown message type: " + type);
                 }
@@ -354,6 +357,14 @@ public class UnifiedServer extends JFrame {
         });
 
         playAudio(audioData);
+    }
+
+    // ==================== RECEIVE MESSAGE ====================
+    private void receiveMessage() throws IOException {
+        String message = dis.readUTF();
+        String clientInfo = clientSocket.getInetAddress().getHostAddress()
+            + ":" + clientSocket.getPort();
+        log("[MESSAGE] " + clientInfo + " >> " + message);
     }
 
     // ==================== SEND IMAGE ====================
