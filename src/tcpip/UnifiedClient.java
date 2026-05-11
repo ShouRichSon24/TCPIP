@@ -17,7 +17,7 @@ import java.util.Date;
  */
 public class UnifiedClient extends JFrame {
 
-    private static final String SERVER_HOST = "localhost";
+    private static final String SERVER_HOST = "10.105.244.223";
     private static final int SERVER_PORT = 5005;
 
     // Common
@@ -102,27 +102,32 @@ public class UnifiedClient extends JFrame {
         gbc.insets = new Insets(5, 8, 5, 8);
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        String[] labels = {"NIM:", "Nama:", "Asal:", "Kelas Praktikum:"};
+        String[] labels = { "NIM:", "Nama:", "Asal:", "Kelas Praktikum:" };
         nimField = new JTextField(20);
         namaField = new JTextField(20);
         asalField = new JTextField(20);
         kelasField = new JTextField(20);
-        JTextField[] fields = {nimField, namaField, asalField, kelasField};
+        JTextField[] fields = { nimField, namaField, asalField, kelasField };
 
         for (int i = 0; i < labels.length; i++) {
-            gbc.gridx = 0; gbc.gridy = i; gbc.weightx = 0;
+            gbc.gridx = 0;
+            gbc.gridy = i;
+            gbc.weightx = 0;
             JLabel lbl = new JLabel(labels[i]);
             lbl.setFont(new Font("SansSerif", Font.BOLD, 12));
             formPanel.add(lbl, gbc);
 
-            gbc.gridx = 1; gbc.weightx = 1.0;
+            gbc.gridx = 1;
+            gbc.weightx = 1.0;
             fields[i].setFont(new Font("SansSerif", Font.PLAIN, 12));
             formPanel.add(fields[i], gbc);
         }
 
         // Buttons
-        gbc.gridx = 1; gbc.gridy = labels.length;
-        gbc.weightx = 0; gbc.fill = GridBagConstraints.NONE;
+        gbc.gridx = 1;
+        gbc.gridy = labels.length;
+        gbc.weightx = 0;
+        gbc.fill = GridBagConstraints.NONE;
         gbc.anchor = GridBagConstraints.EAST;
         JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 5, 0));
         sendMhsBtn = new JButton("Kirim Data");
@@ -226,7 +231,8 @@ public class UnifiedClient extends JFrame {
 
     // ==================== CONNECT ====================
     private void connectToServer() {
-        if (isConnected) return;
+        if (isConnected)
+            return;
         connectBtn.setEnabled(false);
 
         new Thread(() -> {
@@ -294,7 +300,8 @@ public class UnifiedClient extends JFrame {
         } catch (EOFException eof) {
             // normal
         } catch (IOException ioe) {
-            if (isConnected) log("Connection lost: " + ioe.getMessage());
+            if (isConnected)
+                log("Connection lost: " + ioe.getMessage());
         }
     }
 
@@ -350,12 +357,13 @@ public class UnifiedClient extends JFrame {
 
     // ==================== SEND IMAGE ====================
     private void sendImage() {
-        if (!isConnected) return;
+        if (!isConnected)
+            return;
 
         JFileChooser chooser = new JFileChooser();
         chooser.setDialogTitle("Pilih Gambar");
         chooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter(
-            "Image files", "jpg", "jpeg", "png", "gif", "bmp"));
+                "Image files", "jpg", "jpeg", "png", "gif", "bmp"));
 
         if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
             File file = chooser.getSelectedFile();
@@ -420,7 +428,8 @@ public class UnifiedClient extends JFrame {
                 byte[] buf = new byte[4096];
                 while (isRecording) {
                     int n = microphone.read(buf, 0, buf.length);
-                    if (n > 0) audioBuffer.write(buf, 0, n);
+                    if (n > 0)
+                        audioBuffer.write(buf, 0, n);
                 }
             }).start();
         } catch (LineUnavailableException lue) {
@@ -430,7 +439,10 @@ public class UnifiedClient extends JFrame {
 
     private void stopRecording() {
         isRecording = false;
-        if (microphone != null) { microphone.stop(); microphone.close(); }
+        if (microphone != null) {
+            microphone.stop();
+            microphone.close();
+        }
         lastRecordedAudio = audioBuffer.toByteArray();
         log("[VOICE] Recording stopped. Size: " + lastRecordedAudio.length + " bytes");
 
@@ -444,7 +456,8 @@ public class UnifiedClient extends JFrame {
     }
 
     private void sendVoice() {
-        if (lastRecordedAudio == null || !isConnected) return;
+        if (lastRecordedAudio == null || !isConnected)
+            return;
         new Thread(() -> {
             try {
                 dos.writeUTF("VOICE");
@@ -479,7 +492,8 @@ public class UnifiedClient extends JFrame {
     }
 
     private void playReceivedAudio() {
-        if (lastReceivedAudio != null) playAudio(lastReceivedAudio);
+        if (lastReceivedAudio != null)
+            playAudio(lastReceivedAudio);
     }
 
     // ==================== UTILITY ====================
@@ -488,7 +502,8 @@ public class UnifiedClient extends JFrame {
         int totalRead = 0;
         while (totalRead < length) {
             int r = dis.read(data, totalRead, length - totalRead);
-            if (r == -1) break;
+            if (r == -1)
+                break;
             totalRead += r;
         }
         return data;
@@ -503,13 +518,14 @@ public class UnifiedClient extends JFrame {
     }
 
     private Image scaleImage(Image img, int maxW, int maxH) {
-        if (maxW <= 0 || maxH <= 0) return img;
+        if (maxW <= 0 || maxH <= 0)
+            return img;
         double scale = Math.min((double) maxW / img.getWidth(null),
-                               (double) maxH / img.getHeight(null));
+                (double) maxH / img.getHeight(null));
         if (scale < 1.0) {
-            return img.getScaledInstance((int)(img.getWidth(null)*scale),
-                                        (int)(img.getHeight(null)*scale),
-                                        Image.SCALE_SMOOTH);
+            return img.getScaledInstance((int) (img.getWidth(null) * scale),
+                    (int) (img.getHeight(null) * scale),
+                    Image.SCALE_SMOOTH);
         }
         return img;
     }
@@ -518,16 +534,17 @@ public class UnifiedClient extends JFrame {
         new Thread(() -> {
             try {
                 AudioInputStream ais = new AudioInputStream(
-                    new ByteArrayInputStream(audioData), audioFormat,
-                    audioData.length / audioFormat.getFrameSize());
+                        new ByteArrayInputStream(audioData), audioFormat,
+                        audioData.length / audioFormat.getFrameSize());
                 SourceDataLine speaker = (SourceDataLine) AudioSystem.getLine(
-                    new DataLine.Info(SourceDataLine.class, audioFormat));
+                        new DataLine.Info(SourceDataLine.class, audioFormat));
                 speaker.open(audioFormat);
                 speaker.start();
                 log("[VOICE] Playing...");
                 byte[] buf = new byte[4096];
                 int n;
-                while ((n = ais.read(buf)) != -1) speaker.write(buf, 0, n);
+                while ((n = ais.read(buf)) != -1)
+                    speaker.write(buf, 0, n);
                 speaker.drain();
                 speaker.close();
                 log("[VOICE] Playback finished.");
@@ -540,8 +557,8 @@ public class UnifiedClient extends JFrame {
     private void saveWav(byte[] data, String fileName) {
         try {
             AudioInputStream ais = new AudioInputStream(
-                new ByteArrayInputStream(data), audioFormat,
-                data.length / audioFormat.getFrameSize());
+                    new ByteArrayInputStream(data), audioFormat,
+                    data.length / audioFormat.getFrameSize());
             AudioSystem.write(ais, AudioFileFormat.Type.WAVE, new File(fileName));
         } catch (IOException e) {
             log("Error saving WAV: " + e.getMessage());

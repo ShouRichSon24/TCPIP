@@ -94,9 +94,11 @@ public class UnifiedServer extends JFrame {
         JPanel panel = new JPanel(new BorderLayout(5, 5));
         panel.setBorder(new EmptyBorder(8, 8, 8, 8));
 
-        String[] columns = {"No", "NIM", "Nama", "Asal", "Kelas Praktikum", "Waktu"};
+        String[] columns = { "No", "NIM", "Nama", "Asal", "Kelas Praktikum", "Waktu" };
         tableModel = new DefaultTableModel(columns, 0) {
-            public boolean isCellEditable(int r, int c) { return false; }
+            public boolean isCellEditable(int r, int c) {
+                return false;
+            }
         };
         dataTable = new JTable(tableModel);
         dataTable.setFont(new Font("SansSerif", Font.PLAIN, 12));
@@ -194,7 +196,8 @@ public class UnifiedServer extends JFrame {
 
     // ==================== SERVER ====================
     private void startServer() {
-        if (isRunning) return;
+        if (isRunning)
+            return;
         startBtn.setEnabled(false);
 
         new Thread(() -> {
@@ -210,7 +213,7 @@ public class UnifiedServer extends JFrame {
                     dos = new DataOutputStream(clientSocket.getOutputStream());
 
                     String info = clientSocket.getInetAddress().getHostAddress()
-                        + ":" + clientSocket.getPort();
+                            + ":" + clientSocket.getPort();
                     log("Client connected: " + info);
                     updateStatus("Client Connected (" + info + ")", new Color(0, 150, 0));
 
@@ -231,7 +234,8 @@ public class UnifiedServer extends JFrame {
                     log("Client disconnected. Waiting for next...");
                 }
             } catch (IOException ioe) {
-                if (isRunning) log("Error: " + ioe.getMessage());
+                if (isRunning)
+                    log("Error: " + ioe.getMessage());
             }
         }).start();
     }
@@ -252,8 +256,10 @@ public class UnifiedServer extends JFrame {
      */
     private void handleClient() {
         try {
+            log("Waiting for data from client...");
             while (true) {
                 String type = dis.readUTF(); // Baca tipe pesan
+                log("[DEBUG] Received type: " + type);
 
                 switch (type) {
                     case "MAHASISWA":
@@ -293,9 +299,9 @@ public class UnifiedServer extends JFrame {
             int no = tableModel.getRowCount() + 1;
 
             SwingUtilities.invokeLater(() -> {
-                tableModel.addRow(new Object[]{
-                    no, mhs.getNim(), mhs.getNama(), mhs.getAsal(),
-                    mhs.getKelasPraktikum(), time
+                tableModel.addRow(new Object[] {
+                        no, mhs.getNim(), mhs.getNama(), mhs.getAsal(),
+                        mhs.getKelasPraktikum(), time
                 });
             });
 
@@ -304,8 +310,8 @@ public class UnifiedServer extends JFrame {
             // Simpan ke file juga
             PrintWriter writer = new PrintWriter(new FileWriter("data_mahasiswa.txt", true), true);
             writer.println("NIM: " + mhs.getNim() + " | Nama: " + mhs.getNama()
-                + " | Asal: " + mhs.getAsal() + " | Kelas: " + mhs.getKelasPraktikum()
-                + " | Waktu: " + time);
+                    + " | Asal: " + mhs.getAsal() + " | Kelas: " + mhs.getKelasPraktikum()
+                    + " | Waktu: " + time);
             writer.close();
 
         } catch (ClassNotFoundException cnfe) {
@@ -363,18 +369,19 @@ public class UnifiedServer extends JFrame {
     private void receiveMessage() throws IOException {
         String message = dis.readUTF();
         String clientInfo = clientSocket.getInetAddress().getHostAddress()
-            + ":" + clientSocket.getPort();
+                + ":" + clientSocket.getPort();
         log("[MESSAGE] " + clientInfo + " >> " + message);
     }
 
     // ==================== SEND IMAGE ====================
     private void sendImage() {
-        if (clientSocket == null || clientSocket.isClosed()) return;
+        if (clientSocket == null || clientSocket.isClosed())
+            return;
 
         JFileChooser chooser = new JFileChooser();
         chooser.setDialogTitle("Pilih Gambar");
         chooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter(
-            "Image files", "jpg", "jpeg", "png", "gif", "bmp"));
+                "Image files", "jpg", "jpeg", "png", "gif", "bmp"));
 
         if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
             File file = chooser.getSelectedFile();
@@ -417,7 +424,8 @@ public class UnifiedServer extends JFrame {
                 byte[] buf = new byte[4096];
                 while (isRecording) {
                     int n = microphone.read(buf, 0, buf.length);
-                    if (n > 0) audioBuffer.write(buf, 0, n);
+                    if (n > 0)
+                        audioBuffer.write(buf, 0, n);
                 }
             }).start();
         } catch (LineUnavailableException lue) {
@@ -427,7 +435,10 @@ public class UnifiedServer extends JFrame {
 
     private void stopRecording() {
         isRecording = false;
-        if (microphone != null) { microphone.stop(); microphone.close(); }
+        if (microphone != null) {
+            microphone.stop();
+            microphone.close();
+        }
         lastRecordedAudio = audioBuffer.toByteArray();
         log("[VOICE] Recording stopped. Size: " + lastRecordedAudio.length + " bytes");
 
@@ -441,7 +452,8 @@ public class UnifiedServer extends JFrame {
     }
 
     private void sendVoice() {
-        if (lastRecordedAudio == null || clientSocket == null || clientSocket.isClosed()) return;
+        if (lastRecordedAudio == null || clientSocket == null || clientSocket.isClosed())
+            return;
         new Thread(() -> {
             try {
                 dos.writeUTF("VOICE");
@@ -456,7 +468,8 @@ public class UnifiedServer extends JFrame {
     }
 
     private void playReceivedAudio() {
-        if (lastReceivedAudio != null) playAudio(lastReceivedAudio);
+        if (lastReceivedAudio != null)
+            playAudio(lastReceivedAudio);
     }
 
     // ==================== UTILITY ====================
@@ -465,7 +478,8 @@ public class UnifiedServer extends JFrame {
         int totalRead = 0;
         while (totalRead < length) {
             int r = dis.read(data, totalRead, length - totalRead);
-            if (r == -1) break;
+            if (r == -1)
+                break;
             totalRead += r;
         }
         return data;
@@ -480,13 +494,14 @@ public class UnifiedServer extends JFrame {
     }
 
     private Image scaleImage(Image img, int maxW, int maxH) {
-        if (maxW <= 0 || maxH <= 0) return img;
+        if (maxW <= 0 || maxH <= 0)
+            return img;
         double scale = Math.min((double) maxW / img.getWidth(null),
-                               (double) maxH / img.getHeight(null));
+                (double) maxH / img.getHeight(null));
         if (scale < 1.0) {
-            return img.getScaledInstance((int)(img.getWidth(null)*scale),
-                                        (int)(img.getHeight(null)*scale),
-                                        Image.SCALE_SMOOTH);
+            return img.getScaledInstance((int) (img.getWidth(null) * scale),
+                    (int) (img.getHeight(null) * scale),
+                    Image.SCALE_SMOOTH);
         }
         return img;
     }
@@ -495,16 +510,17 @@ public class UnifiedServer extends JFrame {
         new Thread(() -> {
             try {
                 AudioInputStream ais = new AudioInputStream(
-                    new ByteArrayInputStream(audioData), audioFormat,
-                    audioData.length / audioFormat.getFrameSize());
+                        new ByteArrayInputStream(audioData), audioFormat,
+                        audioData.length / audioFormat.getFrameSize());
                 SourceDataLine speaker = (SourceDataLine) AudioSystem.getLine(
-                    new DataLine.Info(SourceDataLine.class, audioFormat));
+                        new DataLine.Info(SourceDataLine.class, audioFormat));
                 speaker.open(audioFormat);
                 speaker.start();
                 log("[VOICE] Playing...");
                 byte[] buf = new byte[4096];
                 int n;
-                while ((n = ais.read(buf)) != -1) speaker.write(buf, 0, n);
+                while ((n = ais.read(buf)) != -1)
+                    speaker.write(buf, 0, n);
                 speaker.drain();
                 speaker.close();
                 log("[VOICE] Playback finished.");
@@ -517,8 +533,8 @@ public class UnifiedServer extends JFrame {
     private void saveWav(byte[] data, String fileName) {
         try {
             AudioInputStream ais = new AudioInputStream(
-                new ByteArrayInputStream(data), audioFormat,
-                data.length / audioFormat.getFrameSize());
+                    new ByteArrayInputStream(data), audioFormat,
+                    data.length / audioFormat.getFrameSize());
             AudioSystem.write(ais, AudioFileFormat.Type.WAVE, new File(fileName));
         } catch (IOException e) {
             log("Error saving WAV: " + e.getMessage());
