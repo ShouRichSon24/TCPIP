@@ -20,6 +20,11 @@ public class UnifiedServer extends JFrame {
 
     private static final int SERVICE_PORT = 5005;
 
+    // Folder penyimpanan
+    private static final String DIR_DATA = "data";
+    private static final String DIR_IMAGES = "images";
+    private static final String DIR_VOICE = "voice";
+
     // Common
     private JLabel statusLabel;
     private JTextArea logArea;
@@ -54,7 +59,15 @@ public class UnifiedServer extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         audioFormat = new AudioFormat(16000, 16, 1, true, false);
+        initFolders();
         initUI();
+    }
+
+    /** Buat folder penyimpanan jika belum ada */
+    private void initFolders() {
+        new File(DIR_DATA).mkdirs();
+        new File(DIR_IMAGES).mkdirs();
+        new File(DIR_VOICE).mkdirs();
     }
 
     private void initUI() {
@@ -260,7 +273,7 @@ public class UnifiedServer extends JFrame {
             while (true) {
                 String type = dis.readUTF(); // Baca tipe pesan
                 log("[DEBUG] Received type: " + type);
-
+                
                 switch (type) {
                     case "MAHASISWA":
                         receiveMahasiswa();
@@ -286,6 +299,8 @@ public class UnifiedServer extends JFrame {
     }
 
     // ==================== RECEIVE MAHASISWA ====================
+    private static final String CSV_FILE = DIR_DATA + File.separator + "data_mahasiswa.csv";
+
     private void receiveMahasiswa() throws IOException {
         int length = dis.readInt();
         byte[] data = readBytes(length);
@@ -295,7 +310,7 @@ public class UnifiedServer extends JFrame {
             Mahasiswa mhs = (Mahasiswa) ois.readObject();
             ois.close();
 
-            String time = new SimpleDateFormat("HH:mm:ss").format(new Date());
+            String time = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
             int no = tableModel.getRowCount() + 1;
 
             SwingUtilities.invokeLater(() -> {
@@ -307,16 +322,40 @@ public class UnifiedServer extends JFrame {
 
             log("[MAHASISWA] " + mhs.toString());
 
-            // Simpan ke file juga
-            PrintWriter writer = new PrintWriter(new FileWriter("data_mahasiswa.txt", true), true);
-            writer.println("NIM: " + mhs.getNim() + " | Nama: " + mhs.getNama()
-                    + " | Asal: " + mhs.getAsal() + " | Kelas: " + mhs.getKelasPraktikum()
-                    + " | Waktu: " + time);
+            // Simpan ke CSV (bisa dibuka langsung di Excel)
+            File csvFile = new File(CSV_FILE);
+            boolean isNew = !csvFile.exists();
+            PrintWriter writer = new PrintWriter(new FileWriter(CSV_FILE, true), true);
+
+            // Tulis header jika file baru
+            if (isNew) {
+                writer.println("No,NIM,Nama,Asal,Kelas Praktikum,Waktu,Client");
+            }
+
+            String clientInfo = clientSocket.getInetAddress().getHostAddress()
+                + ":" + clientSocket.getPort();
+            writer.println(no + ","
+                + escapeCsv(mhs.getNim()) + ","
+                + escapeCsv(mhs.getNama()) + ","
+                + escapeCsv(mhs.getAsal()) + ","
+                + escapeCsv(mhs.getKelasPraktikum()) + ","
+                + time + ","
+                + clientInfo);
             writer.close();
+
+            log("[MAHASISWA] Saved to " + CSV_FILE);
 
         } catch (ClassNotFoundException cnfe) {
             log("Error: " + cnfe.getMessage());
         }
+    }
+
+    /** Escape value untuk CSV (handle koma dan kutip) */
+    private String escapeCsv(String value) {
+        if (value.contains(",") || value.contains("\"") || value.contains("\n")) {
+            return "\"" + value.replace("\"", "\"\"") + "\"";
+        }
+        return value;
     }
 
     // ==================== RECEIVE IMAGE ====================
@@ -327,8 +366,8 @@ public class UnifiedServer extends JFrame {
 
         log("[IMAGE] Received: " + fileName + " (" + length + " bytes)");
 
-        // Save
-        String savePath = "server_" + fileName;
+        // Save to images folder
+        String savePath = DIR_IMAGES + File.separator + fileName;
         FileOutputStream fos = new FileOutputStream(savePath);
         fos.write(imageData);
         fos.close();
@@ -352,7 +391,7 @@ public class UnifiedServer extends JFrame {
         log("[VOICE] Received voice message (" + length + " bytes)");
         lastReceivedAudio = audioData;
 
-        String fileName = "server_voice_" + System.currentTimeMillis() + ".wav";
+        String fileName = DIR_VOICE + File.separator + "voice_" + System.currentTimeMillis() + ".wav";
         saveWav(audioData, fileName);
         log("[VOICE] Saved to: " + fileName);
 

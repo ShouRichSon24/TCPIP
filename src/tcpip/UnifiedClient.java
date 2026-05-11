@@ -17,8 +17,12 @@ import java.util.Date;
  */
 public class UnifiedClient extends JFrame {
 
-    private static final String SERVER_HOST = "10.105.244.223";
+    private static final String SERVER_HOST = "localhost";
     private static final int SERVER_PORT = 5005;
+
+    // Folder penyimpanan
+    private static final String DIR_IMAGES = "images";
+    private static final String DIR_VOICE = "voice";
 
     // Common
     private JLabel statusLabel;
@@ -55,7 +59,13 @@ public class UnifiedClient extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         audioFormat = new AudioFormat(16000, 16, 1, true, false);
+        initFolders();
         initUI();
+    }
+
+    private void initFolders() {
+        new File(DIR_IMAGES).mkdirs();
+        new File(DIR_VOICE).mkdirs();
     }
 
     private void initUI() {
@@ -390,7 +400,7 @@ public class UnifiedClient extends JFrame {
 
         log("[IMAGE] Received: " + fileName + " (" + length + " bytes)");
 
-        String savePath = "client_" + fileName;
+        String savePath = DIR_IMAGES + File.separator + fileName;
         FileOutputStream fos = new FileOutputStream(savePath);
         fos.write(imageData);
         fos.close();
@@ -478,7 +488,7 @@ public class UnifiedClient extends JFrame {
         log("[VOICE] Received from server (" + length + " bytes)");
         lastReceivedAudio = audioData;
 
-        String fileName = "client_voice_" + System.currentTimeMillis() + ".wav";
+        String fileName = DIR_VOICE + File.separator + "voice_" + System.currentTimeMillis() + ".wav";
         saveWav(audioData, fileName);
         log("[VOICE] Saved to: " + fileName);
 
