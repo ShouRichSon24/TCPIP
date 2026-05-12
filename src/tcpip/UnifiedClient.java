@@ -566,10 +566,12 @@ public class UnifiedClient extends JFrame {
 
     private void saveWav(byte[] data, String fileName) {
         try {
+            File file = new File(fileName);
+            file.getParentFile().mkdirs();
             AudioInputStream ais = new AudioInputStream(
                     new ByteArrayInputStream(data), audioFormat,
                     data.length / audioFormat.getFrameSize());
-            AudioSystem.write(ais, AudioFileFormat.Type.WAVE, new File(fileName));
+            AudioSystem.write(ais, AudioFileFormat.Type.WAVE, file);
         } catch (IOException e) {
             log("Error saving WAV: " + e.getMessage());
         }

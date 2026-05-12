@@ -273,7 +273,7 @@ public class UnifiedServer extends JFrame {
             while (true) {
                 String type = dis.readUTF(); // Baca tipe pesan
                 log("[DEBUG] Received type: " + type);
-                
+
                 switch (type) {
                     case "MAHASISWA":
                         receiveMahasiswa();
@@ -329,18 +329,18 @@ public class UnifiedServer extends JFrame {
 
             // Tulis header jika file baru
             if (isNew) {
-                writer.println("No,NIM,Nama,Asal,Kelas Praktikum,Waktu,Client");
+                writer.println("No;NIM;Nama;Asal;Kelas Praktikum;Waktu;Client");
             }
 
             String clientInfo = clientSocket.getInetAddress().getHostAddress()
-                + ":" + clientSocket.getPort();
-            writer.println(no + ","
-                + escapeCsv(mhs.getNim()) + ","
-                + escapeCsv(mhs.getNama()) + ","
-                + escapeCsv(mhs.getAsal()) + ","
-                + escapeCsv(mhs.getKelasPraktikum()) + ","
-                + time + ","
-                + clientInfo);
+                    + ":" + clientSocket.getPort();
+            writer.println(no + ";"
+                    + mhs.getNim() + ";"
+                    + mhs.getNama() + ";"
+                    + mhs.getAsal() + ";"
+                    + mhs.getKelasPraktikum() + ";"
+                    + time + ";"
+                    + clientInfo);
             writer.close();
 
             log("[MAHASISWA] Saved to " + CSV_FILE);
@@ -571,10 +571,12 @@ public class UnifiedServer extends JFrame {
 
     private void saveWav(byte[] data, String fileName) {
         try {
+            File file = new File(fileName);
+            file.getParentFile().mkdirs(); // pastikan folder ada
             AudioInputStream ais = new AudioInputStream(
                     new ByteArrayInputStream(data), audioFormat,
                     data.length / audioFormat.getFrameSize());
-            AudioSystem.write(ais, AudioFileFormat.Type.WAVE, new File(fileName));
+            AudioSystem.write(ais, AudioFileFormat.Type.WAVE, file);
         } catch (IOException e) {
             log("Error saving WAV: " + e.getMessage());
         }
