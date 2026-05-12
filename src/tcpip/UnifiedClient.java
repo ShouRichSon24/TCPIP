@@ -17,7 +17,6 @@ import java.util.Date;
  */
 public class UnifiedClient extends JFrame {
 
-    private static final String SERVER_HOST = "localhost";
     private static final int SERVER_PORT = 5005;
 
     // Folder penyimpanan
@@ -25,6 +24,7 @@ public class UnifiedClient extends JFrame {
     private static final String DIR_VOICE = "voice";
 
     // Common
+    private JTextField hostField;
     private JLabel statusLabel;
     private JTextArea logArea;
     private JButton connectBtn;
@@ -74,11 +74,21 @@ public class UnifiedClient extends JFrame {
 
         // === TOP ===
         JPanel topPanel = new JPanel(new BorderLayout(8, 0));
-        statusLabel = new JLabel("  Status: Disconnected");
+
+        JPanel ipPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
+        JLabel ipLabel = new JLabel("Server IP:");
+        ipLabel.setFont(new Font("SansSerif", Font.BOLD, 12));
+        hostField = new JTextField("localhost", 15);
+        hostField.setFont(new Font("SansSerif", Font.PLAIN, 12));
+        ipPanel.add(ipLabel);
+        ipPanel.add(hostField);
+
+        statusLabel = new JLabel("  Disconnected");
         statusLabel.setFont(new Font("SansSerif", Font.BOLD, 13));
         statusLabel.setForeground(Color.RED);
-        connectBtn = new JButton("Connect to Server");
+        connectBtn = new JButton("Connect");
         connectBtn.addActionListener(e -> connectToServer());
+        topPanel.add(ipPanel, BorderLayout.WEST);
         topPanel.add(statusLabel, BorderLayout.CENTER);
         topPanel.add(connectBtn, BorderLayout.EAST);
         add(topPanel, BorderLayout.NORTH);
@@ -247,13 +257,17 @@ public class UnifiedClient extends JFrame {
 
         new Thread(() -> {
             try {
-                socket = new Socket(SERVER_HOST, SERVER_PORT);
+                String host = hostField.getText().trim();
+                if (host.isEmpty()) host = "localhost";
+                socket = new Socket(host, SERVER_PORT);
                 dis = new DataInputStream(socket.getInputStream());
                 dos = new DataOutputStream(socket.getOutputStream());
                 isConnected = true;
 
-                updateStatus("Connected to " + SERVER_HOST + ":" + SERVER_PORT, new Color(0, 150, 0));
-                log("Connected to server " + SERVER_HOST + ":" + SERVER_PORT);
+                updateStatus("Connected to " + host + ":" + SERVER_PORT, new Color(0, 150, 0));
+                log("Connected to server " + host + ":" + SERVER_PORT);
+
+                SwingUtilities.invokeLater(() -> hostField.setEnabled(false));
 
                 SwingUtilities.invokeLater(() -> {
                     sendMhsBtn.setEnabled(true);
@@ -273,12 +287,16 @@ public class UnifiedClient extends JFrame {
                     recordBtn.setEnabled(false);
                     sendVoiceBtn.setEnabled(false);
                     connectBtn.setEnabled(true);
+                    hostField.setEnabled(true);
                 });
                 log("Disconnected from server.");
 
             } catch (IOException ioe) {
                 log("Error: " + ioe.getMessage());
-                SwingUtilities.invokeLater(() -> connectBtn.setEnabled(true));
+                SwingUtilities.invokeLater(() -> {
+                    connectBtn.setEnabled(true);
+                    hostField.setEnabled(true);
+                });
             }
         }).start();
     }

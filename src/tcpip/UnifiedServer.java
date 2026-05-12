@@ -8,6 +8,7 @@ import java.io.*;
 import java.net.*;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Enumeration;
 
 /**
  * Unified TCP Server - Gabungan Tugas No. 3, 4, 5
@@ -76,12 +77,23 @@ public class UnifiedServer extends JFrame {
 
         // === TOP ===
         JPanel topPanel = new JPanel(new BorderLayout(8, 0));
+
+        // Tampilkan IP server
+        JLabel ipInfoLabel = new JLabel("  Server IP: " + getLocalIPs());
+        ipInfoLabel.setFont(new Font("SansSerif", Font.PLAIN, 11));
+        ipInfoLabel.setForeground(new Color(0, 100, 180));
+
         statusLabel = new JLabel("  Status: Stopped");
         statusLabel.setFont(new Font("SansSerif", Font.BOLD, 13));
         statusLabel.setForeground(Color.RED);
         startBtn = new JButton("Start Server");
         startBtn.addActionListener(e -> startServer());
-        topPanel.add(statusLabel, BorderLayout.CENTER);
+
+        JPanel leftPanel = new JPanel(new GridLayout(2, 1));
+        leftPanel.add(ipInfoLabel);
+        leftPanel.add(statusLabel);
+
+        topPanel.add(leftPanel, BorderLayout.CENTER);
         topPanel.add(startBtn, BorderLayout.EAST);
         add(topPanel, BorderLayout.NORTH);
 
@@ -580,6 +592,29 @@ public class UnifiedServer extends JFrame {
         } catch (IOException e) {
             log("Error saving WAV: " + e.getMessage());
         }
+    }
+
+    /** Dapatkan semua IP address lokal */
+    private String getLocalIPs() {
+        StringBuilder sb = new StringBuilder();
+        try {
+            Enumeration<NetworkInterface> nets = NetworkInterface.getNetworkInterfaces();
+            while (nets.hasMoreElements()) {
+                NetworkInterface ni = nets.nextElement();
+                if (ni.isLoopback() || !ni.isUp()) continue;
+                Enumeration<InetAddress> addrs = ni.getInetAddresses();
+                while (addrs.hasMoreElements()) {
+                    InetAddress addr = addrs.nextElement();
+                    if (addr instanceof Inet4Address) {
+                        if (sb.length() > 0) sb.append(" | ");
+                        sb.append(addr.getHostAddress());
+                    }
+                }
+            }
+        } catch (SocketException e) {
+            sb.append("unknown");
+        }
+        return sb.length() > 0 ? sb.toString() : "localhost";
     }
 
     public static void main(String[] args) {
